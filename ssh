@@ -1,0 +1,33 @@
+ssh:
+ls -a
+如果没有.ssh文件就
+ssh-keygen -t rsa -C "sunyange@cmagic.cn"
+然后进入到
+cd ~/.ssh
+$ ls
+
+$ mkdir key_backup
+$ cp id_rsa* key_backup
+$ rm id_rsa*
+
+然后登陆https://github.com/sunsonavaj
+进入
+On the GitHub site Click “Account Settings” > Click “SSH Public Keys” > Click “Add another public key”
+把刚才生成的id_rsa.pub文件用文本文件打开
+把里面的内容全选 粘贴到key中
+
+然后一切都OK
+
+$ ssh -T git@github.com
+设置用户名和邮箱
+$ git config --global user.name "sunson"
+$ git config --global user.email "sunyange@cmagic.cn"
+如果准备上传文件项目
+进入该项目之后
+git init
+git add **所要上传的文件
+git commit -m 'firstcommit'
+然后
+git remote add origin git@github.com:sunsonavaj/rubyonrails-development.git
+最后按照敲击
+git push -u origin master
