@@ -1,0 +1,128 @@
+1.下载rubyinstaller.exe
+2. gem安装rails
+3. 安装mysql
+4.如果按照示例程序输入如下操作：
+rake db:create RAILS_ENV='development'
+出现如下错误：
+uninitialized constant Rake:DSL
+解决办法是修改Gemfile文件：增加
+require 'rake/dsl_definition' 
+如果出现
+couldn't parse YAML
+解决办法：
+在config/boot.rb 增加
+require 'yaml'
+YAML::ENGINE.yamler= 'syck'
+出现
+uninitialized constant Mysql
+解决办法：
+首先安装
+Devkit
+下载
+https://github.com/oneclick/rubyinstaller/downloads/
+DevKit 是windows平台下编译和使用本地C/C++扩展包的工具。它就是用来模拟Linux平台下的make, gcc, sh来进行编译。
+注：这个方法目前仅支持通过RubyInstaller安装的Ruby，如果不是建议你重新安装。安装方法：双击下载的7z文件，指定解压路径，路径中不能有空格。如C:\DevKit，
+这个路径就是<DEVKIT_INSTALL_DIR>。
+windows下安装DevKit
+DevKit 是windows平台下编译和使用本地C/C++扩展包的工具。它就是用来模拟Linux平台下的make, gcc, sh来进行编译。注：这个方法目前仅支持通过RubyInstaller安装的Ruby，
+如果不是建议你重新安装。安装方法：双击下载的7z文件，指定解压路径，路径中不能有空格。如C:\DevKit，这个路径就是<DEVKIT_INSTALL_DIR>。
+
+> cd <DEVKIT_INSTALL_DIR>
+> ruby dk.rb init
+#生成config.yml，这里会检查将要添加DevKit支持的Ruby列表，只支持通过RubyInstaller安装的Ruby
+#如果这里列出的Ruby与你的要求不符，可以手动修改
+> ruby dk.rb review  #检查要添加DevKit支持的Ruby列表是否有误，可以略过
+> ruby dk.rb install
+[INFO] Updating convenience notice gem override for 'C:/Ruby192'
+[INFO] Installing 'C:/Ruby192/lib/ruby/site_ruby/devkit.rb'
+
+检查是否安装成功
+
+> gem install rdiscount --platform=ruby
+Fetching: rdiscount-1.6.8.gem (100%)
+Temporarily enhancing PATH to include DevKit...
+Building native extensions.  This could take a while...
+Successfully installed rdiscount-1.6.8
+1 gem installed
+Installing ri documentation for rdiscount-1.6.8...
+Installing RDoc documentation for rdiscount-1.6.8...
+
+如果能安装rdiscount成功说明安装DevKit成功。
+
+安装成功之后要安装匹配版本的mysq12
+
+运行 ‘bundle install’ 或者 ‘gem install mysql2′ 遇到如下错误
+
+> gem install mysql2
+ERROR:  Error installing mysql2:
+        The 'mysql2' native gem requires installed build tools.
+
+Please update your PATH to include build tools or download the DevKit
+from 'http://rubyinstaller.org/downloads' and follow the instructions
+at 'http://github.com/oneclick/rubyinstaller/wiki/Development-Kit'
+或者是
+
+Error installing mysql2:
+ERROR: Failed to build gem native extension.
+
+C:/Ruby192/bin/ruby.exe extconf.rb
+
+一般是因为没有安装编译器和没有安装mysql
+
+最简单的解决办法：
+
+如果rails 版本<3.1.0就安装mysql 0.2.6。如果rails 版本是3.1.*才需要安装mysql 0.3.*。切记！
+
+默认安装的是mysql2 0.3.7，这个版本变化较多，可以安装旧版本gem，经测试安装0.2.6不会报错。
+
+gem install mysql2 -v 0.2.6
+
+如果你一定要安装最新版本，可以参照下面方法。
+
+Linux下解决方法：
+
+# sudo apt-get install libmysql-ruby libmysqlclient-dev
+
+Windows下比较麻烦，要先安装DevKit和Mysql。
+
+安装DevKit见我的另一篇文章 windows下安装DevKit
+
+安装Mysql就不细说了，下载后双击即可
+
+以上两步完成后，要这样安装mysql2
+
+> gem install mysql2 -- '--with-mysql-dir="C:\Program Files\MySQL\MySQL Server 5.5"'
+#一定要注意引号，很多朋友忘记带引号，导致安装出错
+Updating installed gems
+Updating mysql2
+Temporarily enhancing PATH to include DevKit...
+Building native extensions.  This could take a while...
+Successfully installed mysql2-0.3.2
+Gems updated: mysql2
+Installing ri documentation for mysql2-0.3.2...
+Enclosing class/module 'mMysql2' for class Client not known
+Installing RDoc documentation for mysql2-0.3.2...
+Enclosing class/module 'mMysql2' for class Client not known
+
+这表示安装成功了，但是使用时可能还会报错。
+
+最后一步：将mysql安装目录下的bin下的libmysql.dll复制到 ruby安装目录/lib下。
+
+注意：为保证版本一致，libmysql.dll不要从网上下载。尽量从自己安装目录下复制。
+
+ 
+
+附：
+
+有时启动服务器时报错
+
+Please install the mysql2 adapter: `gem install activerecord-mysql2-adapter` (no such file to load -- active_record/connection_adapters/mysql2_adapter) (RuntimeError)
+
+但是当gem install activerecord-mysql2-adapter 时会报找不到这个gem。
+
+一般是因为安装的mysql2版本过新，因为mysql2 0.3.2版本开始放弃支持rails 3.0.*。
+
+解法：
+
+gem uninstall mysql2
+gem install mysql2 -v 0.2.7
