@@ -1,0 +1,172 @@
+1.在命令行中运行
+rake db:create RAILS_ENV='development'
+出现如下错误
+uninitialized constant Rake:DSL
+解决办法
+目录下的Rakefile文件 修改如下：
+require 'rake/dsl_definition'
+
+module ::YourApplicationName
+  class Application
+    include Rake::DSL
+  end
+end
+出现错误：
+couldn't parse YAML
+解决办法为：
+在config/boot.rb
+
+require 'yaml'
+YAML::ENGINE.yamler= 'syck'
+出现错误:
+uninitialized constant Mysql
+windows 下rubyonrails的mysql驱动
+1、安装Ruby，http://rubyforge.org/projects/rubyinstaller/　找到"最新发布项目"，点击"下载"，进入下载列表页面。
+
+该页面列出了Ruby当前的所有版本，写本文时最新版本是：1.8.6-25。版本发布日期：2007-03-18
+
+2、下载"ruby186-25.exe"，大约22M。然后安装。One-Click Installer　一键安装，很适合新手。
+
+3、学过Java的都知道，接下来需要配置ClassPath，在环境变量中新增环境变量名"RUBY_HOME"，变量值"D:\ruby"，该值以本机Ruby安装目录为准。然后在　path 加入"%BURY_HOME%\bin"。
+
+4、测试Ruby是否安装成功
+
+在命令行下运行　ruby -v ，显示如下：
+
+ruby 1.8.6 (2007-03-13 patchlevel 0) [i386-mswin32]
+
+如果不放心，再运行 ruby -e 'puts "hello world"'  ，显示如下：
+
+hello world
+
+至此，Ruby的安装告一段落，接下安装　Rails。
+
+5、安装Rails之前需要按顺序安装以下模块：
+
+activesupport   http://rubyforge.org/projects/activesupport
+
+activerecord      http://rubyforge.org/projects/activerecord
+
+actionpack        http://rubyforge.org/projects/actionpack
+
+actionmailer      http://rubyforge.org/projects/actionmailer
+
+actionwebservice（简称aws）　http://rubyforge.org/projects/aws
+
+最后才是　rails
+
+rails               http://rubyforge.org/projects/rails/
+
+注意：　Rails版本与这五个模块版本要匹配才可以正确安装。
+
+这里共享一下怎么匹配版本的方法。（以Rails
+
+一、下载Rails 1.2.3.gem，在D:\rails目录下。
+
+　　在命令行下进入"D:\rails"，运行　gem install rails-1.2.3.gem  ，命令行会显示出错信息，仔细看该信息，你会发现
+
+　　该信息中会提示在安装　rails之前必须安装　"activesupport -1.4.2"，连安装模块的名称和具体版本都列出来了。
+
+　　安装好"activesupport-1.4.2"之后，继续上一步骤，这次会提示安装"activerecord-1.15.3"，其他模块的步骤都一样。
+
+二、仔细看Rails 1.2.3版本的发布日期，是"2007-03-13"。因为这五个模块一般是和Rail同步发布的。你只需要在下载列表
+
+　　中找到对应发布日期的模块下载即可。如果不是同一天，自然是找时间相隔最近的版本
+
+到此，RoR环境告一段落。再推荐一篇文章，本人Ror环境之前也得益于该文档。
+
+ http://www.iteye.com/topic/35929       关于Rails入门可以参考一下
+
+6、这个才是本文的重点，关于　Mysql数据库驱动配置，我的弯路就是在这里折腾的。
+
+一、安装Mysql 5.0，　http://dev.mysql.com/downloads/mysql/5.0.html　下载一个　Windows (x86) ZIP/Setup.EXE，如果是64位操作系统，请下载对应的版本。　我用的是　AMD64/WinXP
+
+二、安装mysql时，记得字符编码要选择"utf-8"，我之前用的gb2312，命令行读取没问题，但是用Ruy读出来的都是乱码。
+
+三、在Mysql安装目录的　lib 目录下，找到 libmySQL.dll ，将该文件Copy到　Ruby安装目录的 bin目录中。这里也有一个版本的问题。我数据库用的是Mysql 5.0.41，每次操作数据库都会报"内存分配错误"，没办法，只好 使用Mysql 5.0.37的　ibmySQL.dll 文件，问题解决。
+
+四、http://rubyforge.org/projects/mysql-win　，下载　mysql-2.7.3-mswin32.gem　，这是 mysql_Ruby驱动程序。
+
+命令行，进入该文件所在目录，运行　gem　install mysql-2.7.3-mswin32.gem ，安装成功即可。
+
+　　你也可以在 mysql官方网站下载 ruby的驱动，该网站附带安装步骤，API文档。
+
+五、测试 mysql 驱动程序。
+
+  新建　mytest..rb ，代码如下：
+ruby 代码
+
+        require 'mysql'
+        begin
+          dbh = Mysql.real_connect("localhost", "root", "root", "library",3306)
+
+        ## 创建表，插入计录，查询计录
+        dbh.query("drop table if exists test_rb")
+        dbh.query("create table test_rb(id int,name char(20))")
+        dbh.query("insert into test_rb values(1,'张三'),(2,'李四')")
+        printf "%d rows were inserted\n",dbh.affected_rows
+
+          res = dbh.query("SELECT name FROM test_rb")
+        puts "========\n"
+        while row = res.fetch_row do
+        printf "%s, %s\n", row[0], row[1]
+        end
+        puts "========\n"
+        puts "Server version: " + dbh.get_server_info
+        rescue Mysql::Error => e
+        puts "Error code: #{e.errno}"
+        puts "Error message: #{e.error}"
+        puts "Error SQLSTATE: #{e.sqlstate}" if e.respond_to?("sqlstate")
+        ensure
+        dbh.close if dbh
+        end
+
+     在命令行运行 ruby mytest.rb  ，结果如下：
+
+2 rows were inserted
+========
+张三,
+李四,
+========
+Server version: 5.0.41-community-nt
+
+Devkit
+https://github.com/oneclick/rubyinstaller/downloads/
+DevKit 是windows平台下编译和使用本地C/C++扩展包的工具。它就是用来模拟Linux平台下的make, gcc, sh来进行编译。注：这个方法目前仅支持通过RubyInstaller安装的Ruby，如果不是建议你重新安装。安装方法：双击下载的7z文件，指定解压路径，路径中不能有空格。如C:\DevKit，这个路径就是<DEVKIT_INSTALL_DIR>。
+windows下安装DevKit
+六 4th, 2011
+发表评论 | Trackback
+
+windows下安装或升级时gem经常会碰到
+
+Please update your PATH to include build tools or download the DevKit
+from 'http://rubyinstaller.org/downloads' and follow the instructions
+at 'http://github.com/oneclick/rubyinstaller/wiki/Development-Kit'
+
+这是因为没有安装DevKit的缘故。
+
+DevKit 是windows平台下编译和使用本地C/C++扩展包的工具。它就是用来模拟Linux平台下的make, gcc, sh来进行编译。注：这个方法目前仅支持通过RubyInstaller安装的Ruby，如果不是建议你重新安装。安装方法：双击下载的7z文件，指定解压路径，路径中不能有空格。如C:\DevKit，这个路径就是<DEVKIT_INSTALL_DIR>。
+
+> cd <DEVKIT_INSTALL_DIR>
+> ruby dk.rb init
+#生成config.yml，这里会检查将要添加DevKit支持的Ruby列表，只支持通过RubyInstaller安装的Ruby
+#如果这里列出的Ruby与你的要求不符，可以手动修改
+> ruby dk.rb review  #检查要添加DevKit支持的Ruby列表是否有误，可以略过
+> ruby dk.rb install
+[INFO] Updating convenience notice gem override for 'C:/Ruby192'
+[INFO] Installing 'C:/Ruby192/lib/ruby/site_ruby/devkit.rb'
+
+检查是否安装成功
+
+> gem install rdiscount --platform=ruby
+Fetching: rdiscount-1.6.8.gem (100%)
+Temporarily enhancing PATH to include DevKit...
+Building native extensions.  This could take a while...
+Successfully installed rdiscount-1.6.8
+1 gem installed
+Installing ri documentation for rdiscount-1.6.8...
+Installing RDoc documentation for rdiscount-1.6.8...
+
+如果能安装rdiscount成功说明安装DevKit成功。
+
+英文原版地址：https://github.com/oneclick/rubyinstaller/wiki/development-kit
